@@ -45,10 +45,14 @@ public strictfp class RobotPlayer {
         int sumX = x0;
         int sumY = y0;
         int numPlaces = 0;
+       
+        
+        h = 3;
         
     	while (true){
+    		System.out.println("Fuck you");
     		try{  
-    		    while (rc.getRoundNum() < NumScoutMappingPhase) {
+    		    while (rc.getRoundNum() < 5000) {
     		        MapLocation currentMapLocation = rc.getLocation();
     		        int x = currentMapLocation.x;
     		        int y = currentMapLocation.y;
@@ -61,19 +65,46 @@ public strictfp class RobotPlayer {
     		        
     		        Direction dir;
     		        double coinToss = Math.random();
-    		        double angleFactor = Math.random();
+    		        double angleFactor = Math.random()*20;
     		        
-    		        MapLocation averageLocation = new MapLocation((float) 1.0*sumX/numPlaces, (float) 1.0*sumY/numPlaces);
-    		                
+    		        //double offsetX=Math.random()*1.0*(sumX/numPlaces)
+    		        //double offsetY=Math.random()*1.0*(sumY/numPlaces)
+    		        MapLocation averageLocation = new MapLocation((float) (1.0*sumX/numPlaces), 
+    		        		(float) (1.0*sumY/numPlaces));
+    		        System.out.println(1.0*sumX/numPlaces+","+1.0*sumY/numPlaces)
     		        if (coinToss < 0.5) { // turn left
-    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) 67.5+angleFactor*45);
+    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) 80+angleFactor);
     		        } else { // turn right
-                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) 67.5+angleFactor*45);
+                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) 80+angleFactor);
     		        }
     		        
     		        if (rc.canMove(dir)) {
     		            rc.move(dir);
     		        }
+    		        //Edge and corner detection
+    		       
+    		        
+    		        //Up
+//    		        for (int elt=1;elt<11;elt++){
+//    		        	MapLocation Up= new MapLocation((float)(x),(float)(y+elt))
+//    		        	MapLocation Down=new MapLocation((float)(x),(float)(y-elt))
+//    		    		MapLocation Left=new MapLocation((float)(x-elt),(float)(y))
+//    		    		MapLocation Right= new MapLocation((float)(x+elt),(float)(y))
+//    		    		if (!Up.onTheMap)){
+//    		    			
+//    		    		}
+//    		        	if (!Down.onTheMap()){
+//    		        		
+//    		        	}
+//    		        	if (!Left.onTheMap()){
+//    		        		
+//    		        	}
+//    		        	if (!Right.onTheMap()){
+//    		        		
+//    		        	}
+//    		        }
+    		        
+    		       
     		    }
     		    
     			Clock.yield();
