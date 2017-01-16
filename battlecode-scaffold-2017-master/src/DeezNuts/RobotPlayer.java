@@ -30,9 +30,20 @@ public strictfp class RobotPlayer {
             case LUMBERJACK:
                 runLumberjack();
                 break;
+            case SCOUT:
+            	runScout();
+            	break;
         }
 	}
-
+    static void runScout()throws GameActionException{
+    	while (true){
+    		try{
+    			Clock.yield();
+    		} catch (Exception e){
+    			
+    		}
+    	}
+    }
     static void runArchon() throws GameActionException {
         System.out.println("I'm an archon!");
 
