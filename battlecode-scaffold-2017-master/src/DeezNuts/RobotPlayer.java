@@ -3,6 +3,7 @@ import battlecode.common.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
+    static NumScoutMappingPhase = 100;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -36,8 +37,45 @@ public strictfp class RobotPlayer {
         }
 	}
     static void runScout()throws GameActionException{
+        MapLocation[] globalMap = new MapLocation[200*200];
+        MapLocation initialMapLocation = rc.getLocation();
+        int x0 = initialMapLocation.x;
+        int y0 = initialMapLocation.y;
+        
+        int sumX = x0;
+        int sumY = y0;
+        int numPlaces = 0;
+        
     	while (true){
-    		try{
+    		try{  
+    		    while (rc.getRoundNum() < NumScoutMappingPhase) {
+    		        MapLocation currentMapLocation = rc.getLocation();
+    		        int x = currentMapLocation.x;
+    		        int y = currentMapLocation.y;
+    		        
+    		        globalMap[x-x0+100+200*(y-y0+100)] = currentMapLocation;
+    		        
+    		        sumX += x-x0;
+    		        sumY += y-y0;
+    		        numPlaces++;
+    		        
+    		        Direction dir;
+    		        double coinToss = Math.random();
+    		        double angleFactor = Math.random();
+    		        
+    		        MapLocation averageLocation = new MapLocation((float) 1.0*sumX/numPlaces, (float) 1.0*sumY/numPlaces);
+    		                
+    		        if (coinToss < 0.5) { // turn left
+    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) 67.5+angleFactor*45);
+    		        } else { // turn right
+                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) 67.5+angleFactor*45);
+    		        }
+    		        
+    		        if (rc.canMove(dir)) {
+    		            rc.move(dir);
+    		        }
+    		    }
+    		    
     			Clock.yield();
     		} catch (Exception e){
     			
