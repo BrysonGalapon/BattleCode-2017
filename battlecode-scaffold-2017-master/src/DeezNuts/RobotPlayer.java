@@ -47,7 +47,6 @@ public strictfp class RobotPlayer {
         int numPlaces = 0;
        
     	while (true){
-    		System.out.println("Fuck you");
     		try{  
     		    if (rc.getRoundNum() < 5000) {
     		        MapLocation currentMapLocation = rc.getLocation();
@@ -68,7 +67,7 @@ public strictfp class RobotPlayer {
     		        //double offsetY=Math.random()*1.0*(sumY/numPlaces)
     		        MapLocation averageLocation = new MapLocation((float) (1.0*sumX/numPlaces), 
     		        		(float) (1.0*sumY/numPlaces));
-    		        System.out.printf(1.0*sumX/numPlaces + "%d, %d" + 1.0*sumY/numPlaces);
+    		        System.out.printf("%f, %f", 1.0*sumX/numPlaces, 1.0*sumY/numPlaces);
     		        if (coinToss < 0.5) { // turn left
     		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) (80+angleFactor));
     		        } else { // turn right
