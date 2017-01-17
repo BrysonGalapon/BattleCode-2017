@@ -41,43 +41,66 @@ public strictfp class RobotPlayer {
         MapLocation initialMapLocation = rc.getLocation();
         int x0 = (int) Math.floor(initialMapLocation.x);
         int y0 = (int) Math.floor(initialMapLocation.y);
-        
-        float sumX = x0;
-        float sumY = y0;
-        int numPlaces = 0;
+        MapLocation[] locationsVisited= new MapLocation[50];
+        locationsVisited[0]=initialMapLocation;
+        Direction stride= new Direction((float)(Math.random()*2*Math.PI));
+        int index=0;
        
     	while (true){
     		try{  
     		    if (rc.getRoundNum() < 5000) {
-    		        MapLocation currentMapLocation = rc.getLocation();
-    		        int x = (int) Math.floor(currentMapLocation.x);
-    		        int y = (int) Math.floor(currentMapLocation.y);
-    		        
-    		        globalMap[x-x0+100+200*(y-y0+100)] = currentMapLocation;
-    		        
-    		        sumX += x-x0;
-    		        sumY += y-y0;
-    		        numPlaces++;
-    		        
-    		        Direction dir;
-    		        double coinToss = Math.random();
-    		        double angleFactor = Math.random()*20;
-    		        
-    		        //double offsetX=Math.random()*1.0*(sumX/numPlaces)
-    		        //double offsetY=Math.random()*1.0*(sumY/numPlaces)
-    		        MapLocation averageLocation = new MapLocation((float) (1.0*sumX/numPlaces), 
-    		        		(float) (1.0*sumY/numPlaces));
-    		        System.out.printf("%f, %f", 1.0*sumX/numPlaces, 1.0*sumY/numPlaces);
-    		        if (coinToss < 0.5) { // turn left
-    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) (80+angleFactor));
-    		        } else { // turn right
-                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) (80+angleFactor));
-    		        }
-    		        
-    		        if (rc.canMove(dir)) {
-    		            rc.move(dir);
-    		        }
-    		        
+    		    	MapLocation currentLocation=rc.getLocation();
+    		    	if (currentLocation.distanceTo(locationsVisited[index])<20){
+    		    		if (rc.canMove(stride,(float)2.5)){
+    		    			rc.move(stride,(float)2.5);
+    		    			
+    		    		}
+    		    		else{
+    		    			stride=new Direction((float)(Math.random()*2*Math.PI));
+    		    			System.out.println("struck");
+    		    		}
+    		    	}
+    		    	else{
+    		    		index++;
+    		    		stride=new Direction((float)(Math.random()*2*Math.PI));
+    		    		locationsVisited[index]=currentLocation;
+    		    	}
+    		    	
+    		    	
+    		    			
+//    		        MapLocation currentMapLocation = rc.getLocation();
+//    		        int x = (int) Math.floor(currentMapLocation.x);
+//    		        int y = (int) Math.floor(currentMapLocation.y);
+//    		        
+//    		        globalMap[x-x0+100+200*(y-y0+100)] = currentMapLocation;
+//    		        
+//    		        sumX += x-x0;
+//    		        sumY += y-y0;
+//    		        
+//    		        
+//
+//    		        
+//    		        Direction dir;
+//    		        double coinToss = Math.random();
+//    		        double angleFactor = Math.random()*2;
+//    		        
+//    		        //double offsetX=Math.random()*1.0*(sumX/numPlaces)
+//    		        //double offsetY=Math.random()*1.0*(sumY/numPlaces)
+//    		        MapLocation averageLocation = new MapLocation((float) (1.0*sumX/numPlaces+initialMapLocation.x), 
+//    		        		(float) (1.0*sumY/numPlaces+initialMapLocation.y));
+//    		        //System.out.printf("%f, %f", 1.0*sumX/numPlaces, 1.0*sumY/numPlaces);
+//    		        if (coinToss < 0.5) { // turn left
+//    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) (90));
+//    		        } else { // turn right
+//                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) (90));
+//    		        }
+//    		        System.out.println(dir);
+//    		        if (rc.canMove(dir)) {
+//    		            rc.move(dir);
+//    		            numPlaces++;
+//    		            System.out.println("I moved");
+//    		        }
+//    		        
     	            Clock.yield();
 
     		        //Edge and corner detection
@@ -359,4 +382,5 @@ public strictfp class RobotPlayer {
 
         return (perpendicularDist <= rc.getType().bodyRadius);
     }
+    
 }
