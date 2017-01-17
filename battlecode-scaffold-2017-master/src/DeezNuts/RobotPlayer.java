@@ -3,7 +3,7 @@ import battlecode.common.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
-    static NumScoutMappingPhase = 100;
+    static int numScoutMappingPhase = 100;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -39,23 +39,20 @@ public strictfp class RobotPlayer {
     static void runScout()throws GameActionException{
         MapLocation[] globalMap = new MapLocation[200*200];
         MapLocation initialMapLocation = rc.getLocation();
-        int x0 = initialMapLocation.x;
-        int y0 = initialMapLocation.y;
+        int x0 = (int) Math.floor(initialMapLocation.x);
+        int y0 = (int) Math.floor(initialMapLocation.y);
         
-        int sumX = x0;
-        int sumY = y0;
+        float sumX = x0;
+        float sumY = y0;
         int numPlaces = 0;
        
-        
-        h = 3;
-        
     	while (true){
     		System.out.println("Fuck you");
     		try{  
-    		    while (rc.getRoundNum() < 5000) {
+    		    if (rc.getRoundNum() < 5000) {
     		        MapLocation currentMapLocation = rc.getLocation();
-    		        int x = currentMapLocation.x;
-    		        int y = currentMapLocation.y;
+    		        int x = (int) Math.floor(currentMapLocation.x);
+    		        int y = (int) Math.floor(currentMapLocation.y);
     		        
     		        globalMap[x-x0+100+200*(y-y0+100)] = currentMapLocation;
     		        
@@ -71,16 +68,19 @@ public strictfp class RobotPlayer {
     		        //double offsetY=Math.random()*1.0*(sumY/numPlaces)
     		        MapLocation averageLocation = new MapLocation((float) (1.0*sumX/numPlaces), 
     		        		(float) (1.0*sumY/numPlaces));
-    		        System.out.println(1.0*sumX/numPlaces+","+1.0*sumY/numPlaces)
+    		        System.out.printf(1.0*sumX/numPlaces + "%d, %d" + 1.0*sumY/numPlaces);
     		        if (coinToss < 0.5) { // turn left
-    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) 80+angleFactor);
+    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) (80+angleFactor));
     		        } else { // turn right
-                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) 80+angleFactor);
+                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) (80+angleFactor));
     		        }
     		        
     		        if (rc.canMove(dir)) {
     		            rc.move(dir);
     		        }
+    		        
+    	            Clock.yield();
+
     		        //Edge and corner detection
     		       
     		        
@@ -106,8 +106,6 @@ public strictfp class RobotPlayer {
     		        
     		       
     		    }
-    		    
-    			Clock.yield();
     		} catch (Exception e){
     			
     		}
@@ -151,6 +149,9 @@ public strictfp class RobotPlayer {
 	static void runGardener() throws GameActionException {
         System.out.println("I'm a gardener!");
 
+        int maxNumScouts = 2;
+        int currentNumScouts = 0;
+        
         // The code you want your robot to perform every round should be in this loop
         while (true) {
 
@@ -165,6 +166,10 @@ public strictfp class RobotPlayer {
                 // Generate a random direction
                 Direction dir = randomDirection();
 
+                if (currentNumScouts < maxNumScouts && rc.canBuildRobot(RobotType.SCOUT, dir)) {
+                    rc.buildRobot(RobotType.SCOUT, dir);
+                }
+                
                 // Randomly attempt to build a soldier or lumberjack in this direction
                 if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .01) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
