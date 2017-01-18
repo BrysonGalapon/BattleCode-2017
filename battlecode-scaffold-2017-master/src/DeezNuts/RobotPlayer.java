@@ -37,27 +37,56 @@ public strictfp class RobotPlayer {
         }
 	}
     static void runScout()throws GameActionException{
-        MapLocation[] globalMap = new MapLocation[200*200];
+        int[] globalMap= new int[200*200];
+        
         MapLocation initialMapLocation = rc.getLocation();
         int x0 = (int) Math.floor(initialMapLocation.x);
         int y0 = (int) Math.floor(initialMapLocation.y);
-        MapLocation[] locationsVisited= new MapLocation[50];
+        
+        //exploring
+        MapLocation[] locationsVisited= new MapLocation[500];
         locationsVisited[0]=initialMapLocation;
         Direction stride= new Direction((float)(Math.random()*2*Math.PI));
         int index=0;
+        
+        //
+        MapLocation[] initialArchonLocations= rc.getInitialArchonLocations(rc.getTeam());
+        //Pick the first one as reference for all units.
+        int initialArchonX = (int)initialArchonLocations[0].x;
+        int initialArchonY = (int)initialArchonLocations[0].y;
        
     	while (true){
     		try{  
     		    if (rc.getRoundNum() < 5000) {
     		    	MapLocation currentLocation=rc.getLocation();
+    		        int x = (int) Math.floor(currentLocation.x);
+    		        int y = (int) Math.floor(currentLocation.y);
+
+    		        
+    		        for (TreeInfo tree: rc.senseNearbyTrees((float)10.0)){
+    		        	int treeX= (int)Math.floor(tree.location.x);
+    		        	int treeY= (int)Math.floor(tree.location.y);
+    		        	
+    		        	//Protocol: +/-(_,_,_),(_,_,_) First one is Y, second one is X
+    		        	globalMap[treeX-initialArchonX+100+200*(treeY-initialArchonY+100)]=1;
+    		        	System.out.println(treeX);
+    		        	System.out.println(treeY);
+	
+    		        }
+    		        
+    		        ////////////////////////////////////////////////////////////////
+    		        
     		    	if (currentLocation.distanceTo(locationsVisited[index])<20){
+    		    		//System.out.println("I am Close");
     		    		if (rc.canMove(stride,(float)2.5)){
     		    			rc.move(stride,(float)2.5);
     		    			
+    		    			
     		    		}
     		    		else{
+    		    			//System.out.println("can't move");
     		    			stride=new Direction((float)(Math.random()*2*Math.PI));
-    		    			System.out.println("struck");
+    		    			//System.out.println("struck");
     		    		}
     		    	}
     		    	else{
@@ -66,13 +95,18 @@ public strictfp class RobotPlayer {
     		    		locationsVisited[index]=currentLocation;
     		    	}
     		    	
+//    		    	String rep = "";
+//    		    	for (int i = 199; i>=0; i--) {
+//    		    		for (int j = 0; j < 200; j++) {
+//    		    			rep += Integer.toString(globalMap[200*i+j]);
+//    		    		}
+//    		    		rep += "\n";
+//    		    	}
     		    	
+    		    	//System.out.println(rep);
     		    			
 //    		        MapLocation currentMapLocation = rc.getLocation();
-//    		        int x = (int) Math.floor(currentMapLocation.x);
-//    		        int y = (int) Math.floor(currentMapLocation.y);
 //    		        
-//    		        globalMap[x-x0+100+200*(y-y0+100)] = currentMapLocation;
 //    		        
 //    		        sumX += x-x0;
 //    		        sumY += y-y0;
@@ -101,7 +135,7 @@ public strictfp class RobotPlayer {
 //    		            System.out.println("I moved");
 //    		        }
 //    		        
-    	            Clock.yield();
+    		    	Clock.yield();
 
     		        //Edge and corner detection
     		       
@@ -129,7 +163,7 @@ public strictfp class RobotPlayer {
     		       
     		    }
     		} catch (Exception e){
-    			
+    			Clock.yield();
     		}
     	}
     }
