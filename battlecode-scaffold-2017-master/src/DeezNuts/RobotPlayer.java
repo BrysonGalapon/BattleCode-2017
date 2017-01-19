@@ -155,8 +155,8 @@ public strictfp class RobotPlayer {
 
                 // Broadcast archon's location for other robots on the team to know
                 MapLocation myLocation = rc.getLocation();
-                rc.broadcast(0,(int)myLocation.x);
-                rc.broadcast(1,(int)myLocation.y);
+                rc.broadcast(0, (int)myLocation.x);
+                rc.broadcast(1, (int)myLocation.y);
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
@@ -188,14 +188,15 @@ public strictfp class RobotPlayer {
                 // Generate a random direction
                 Direction dir = randomDirection();
 
-                if (currentNumScouts < maxNumScouts && rc.canBuildRobot(RobotType.SCOUT, dir)) {
-                    rc.buildRobot(RobotType.SCOUT, dir);
-                }
+//                if (currentNumScouts < maxNumScouts && rc.canBuildRobot(RobotType.SCOUT, dir)) {
+//                    rc.buildRobot(RobotType.SCOUT, dir);
+//                    currentNumScouts++;
+//                }
                 
                 // Randomly attempt to build a soldier or lumberjack in this direction
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .01) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < 1) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
-                } else if (rc.canBuildRobot(RobotType.LUMBERJACK, dir) && Math.random() < .01 && rc.isBuildReady()) {
+                } else if (rc.canBuildRobot(RobotType.LUMBERJACK, dir) && Math.random() < 1 && rc.isBuildReady()) {
                     rc.buildRobot(RobotType.LUMBERJACK, dir);
                 }
 
@@ -215,32 +216,104 @@ public strictfp class RobotPlayer {
     static void runSoldier() throws GameActionException {
         System.out.println("I'm an soldier!");
         Team enemy = rc.getTeam().opponent();
-
+        
+        /*
+         * State -> Function Mapping
+         * 
+         * 0 -> Attack 
+         * 1 -> Retreat
+         * 2 -> Herding
+         * 3 -> Protection
+         * 
+         */
+        
+        int state = 0;
+        
         // The code you want your robot to perform every round should be in this loop
         while (true) {
-
-            // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
+                
+                
+                // redecide which state to enter, based on broadcast channel/environmental stimuli/local resources
+                
                 MapLocation myLocation = rc.getLocation();
-
-                // See if there are any nearby enemy robots
-                RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);
-
-                // If there are some...
-                if (robots.length > 0) {
-                    // And we have enough bullets, and haven't attacked yet this turn...
-                    if (rc.canFireSingleShot()) {
-                        // ...Then fire a bullet in the direction of the enemy.
-                        rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
-                    }
+                RobotInfo[] enemy_robots = rc.senseNearbyRobots(-1, enemy);
+                RobotInfo[] team_robots = rc.senseNearbyRobots(-1, rc.getTeam());
+                
+                if (rc.getHealth() < 0.3*50) {
+                    state = 1;
                 }
-
-                // Move randomly
-                tryMove(randomDirection());
-
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
+                
+                switch(state) {
+                
+                case 0: // attacking code
+                    // If there are some...
+                    if (enemy_robots.length > 0) {
+                        // And we have enough bullets, and haven't attacked yet this turn...
+                        if (rc.canFireSingleShot()) {
+                            // ...Then fire a bullet in the direction of the enemy.
+                            Direction fireDirection = rc.getLocation().directionTo(enemy_robots[0].location);
+                            
+                            boolean callOffFire = false;
+                            
+                            for (RobotInfo team_robot : team_robots) {
+                                Direction friendDirection = rc.getLocation().directionTo(team_robot.location);
+                                
+                                float angleBetween = friendDirection.degreesBetween(fireDirection);
+                                
+                                if (angleBetween < 40) {
+                                    callOffFire = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!callOffFire) {
+                                rc.fireSingleShot(fireDirection);
+                            }
+                        }
+                    }
+                    
+                    if (enemy_robots.length == 0) {
+                        // move randomly 
+                        tryMove(randomDirection());
+                    } else {
+                        // follow the enemy
+                        tryMove(myLocation.directionTo(enemy_robots[0].location));
+                    }
+                    break;
+                
+                case 1: // retreating code
+                    // If there are some...
+                    if (enemy_robots.length > 0) {
+                        // And we have enough bullets, and haven't attacked yet this turn...
+                        if (rc.canFireSingleShot()) {
+                            // ...Then fire a bullet in the direction of the enemy.
+                            rc.fireSingleShot(rc.getLocation().directionTo(enemy_robots[0].location));
+                        }
+                    }
+                    
+                    if (enemy_robots.length == 0) {
+                        // move randomly 
+                        tryMove(randomDirection());
+                    } else {
+                        // run away from the enemy
+                        tryMove(myLocation.directionTo(enemy_robots[0].location).rotateLeftDegrees((float) 180));
+                    }
+                    
+                    break;
+                    
+                case 2: // herding code
+                    break;
+                    
+                case 3: // protection code
+                    break;
+                    
+                default:
+                    throw new RuntimeException("Shouldn't be here");
+                }
+                
                 Clock.yield();
-
+                
             } catch (Exception e) {
                 System.out.println("Soldier Exception");
                 e.printStackTrace();
