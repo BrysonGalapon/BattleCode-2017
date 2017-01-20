@@ -37,7 +37,7 @@ public strictfp class RobotPlayer {
         }
 	}
     static void runScout()throws GameActionException{
-        int[] globalMap= new int[200*200];
+        //int[] globalMap= new int[200*200];
         
         MapLocation initialMapLocation = rc.getLocation();
         int x0 = (int) Math.floor(initialMapLocation.x);
@@ -47,7 +47,7 @@ public strictfp class RobotPlayer {
         MapLocation[] locationsVisited= new MapLocation[500];
         locationsVisited[0]=initialMapLocation;
         Direction stride= new Direction((float)(Math.random()*2*Math.PI));
-        int index=0;
+        int indexMove=0;
         
         //
         MapLocation[] initialArchonLocations= rc.getInitialArchonLocations(rc.getTeam());
@@ -62,21 +62,73 @@ public strictfp class RobotPlayer {
     		        int x = (int) Math.floor(currentLocation.x);
     		        int y = (int) Math.floor(currentLocation.y);
 
+    		        //TreeInfo[] treeLocations=rc.senseNearbyTrees((float)10.0);
     		        
-    		        for (TreeInfo tree: rc.senseNearbyTrees((float)10.0)){
-    		        	int treeX= (int)Math.floor(tree.location.x);
-    		        	int treeY= (int)Math.floor(tree.location.y);
+//		        	int treeX= (int)Math.floor(tree.location.x);
+//		        	int treeY= (int)Math.floor(tree.location.y);
+//		        	String xLocation=Integer.toBinaryString(treeX);
+//		        	String yLocation=Integer.toBinaryString(Math.abs(treeY));
+//		        	String sign=Integer.toString((int)Math.signum(treeY));
+//		        	
+//		        	String messageToSend=sign+YLocation+xLocation;
+
+		        	
+    		        
+		        	for (int index=1;index<=10;index++){
+		        		
+		        		int isOpen=rc.readBroadcast(index);
+		        		
+		        		//0 is open, 1 is Close
+		        		if (isOpen==0){
+		        			//The channels from 11 to 20
+		        			rc.broadcast(index,1);
+		        			int currentIndex=10*index+1;
+		        			
+		        			
+		        			//Initial Message to send
+		        			String xInitial=Integer.toBinaryString(x);
+		        			String yInitial=Integer.toBinaryString(y);
+		        			String signInitial=Integer.toString((int)Math.signum(y));
+		        			
+		        			String initialMessageToSend=signInitial+yInitial+xInitial;
+		        			
+		        			rc.broadcast(currentIndex,Integer.parseInt(initialMessageToSend,2));
+		        			currentIndex++;
+		        			String toSend="";
+		        			for (int dx=x-6;dx<=x+6;dx++){
+		        				for (int dy=y+6;dy>=y-6;dy--){
+	        						if (rc.senseTreeAtLocation(new MapLocation(dx,dy))!=null){
+	        							toSend=toSend+"1";	
+	        						}
+	        						else{
+	        							toSend=toSend+"0";
+	        						}
+	        						//System.out.println(toSend.length());
+		        					if (toSend.length()==28){
+		        						rc.broadcast(currentIndex,Integer.parseInt(toSend,2));
+		        						currentIndex++;
+		        						toSend="";
+		        					}
+	        					
+		        					
+		        				}
+		        			}
+		        			rc.broadcast(index*10+10,1);
+		        			break;
+		        		}
     		        	
-    		        	//Protocol: +/-(_,_,_),(_,_,_) First one is Y, second one is X
-    		        	globalMap[treeX-initialArchonX+100+200*(treeY-initialArchonY+100)]=1;
-    		        	System.out.println(treeX);
-    		        	System.out.println(treeY);
-	
+    		        	
+    		        			
+    		        	
+    		        	
+    		        	
     		        }
+    		        
+    		        
     		        
     		        ////////////////////////////////////////////////////////////////
     		        
-    		    	if (currentLocation.distanceTo(locationsVisited[index])<20){
+    		    	if (currentLocation.distanceTo(locationsVisited[indexMove])<20){
     		    		//System.out.println("I am Close");
     		    		if (rc.canMove(stride,(float)2.5)){
     		    			rc.move(stride,(float)2.5);
@@ -90,9 +142,9 @@ public strictfp class RobotPlayer {
     		    		}
     		    	}
     		    	else{
-    		    		index++;
+    		    		indexMove++;
     		    		stride=new Direction((float)(Math.random()*2*Math.PI));
-    		    		locationsVisited[index]=currentLocation;
+    		    		locationsVisited[indexMove]=currentLocation;
     		    	}
     		    	
 //    		    	String rep = "";
@@ -163,6 +215,8 @@ public strictfp class RobotPlayer {
     		       
     		    }
     		} catch (Exception e){
+    			System.out.println("fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuck");
+    			
     			Clock.yield();
     		}
     	}
@@ -181,16 +235,32 @@ public strictfp class RobotPlayer {
 
                 // Randomly attempt to build a gardener in this direction
                 if (rc.canHireGardener(dir)) {
-                    rc.hireGardener(dir);
+                     rc.hireGardener(dir);
+                 }
+                
+                
+                for (int elt=1;elt<11;elt++){
+                	int isOpen=rc.readBroadcast(elt);
+                	if (isOpen==1 && rc.readBroadcast(elt*10+10)==1){
+                		int currentIndex=10*isOpen+1;
+
+                		
+                		for (int stuff=currentIndex;stuff<currentIndex+10;stuff++){
+                			System.out.println(rc.readBroadcast(stuff));
+                		}
+                		break;
+                	}
+                	
                 }
+                
+                
+                
 
                 // Move randomly
                 //tryMove(randomDirection());
 
                 // Broadcast archon's location for other robots on the team to know
-                MapLocation myLocation = rc.getLocation();
-                rc.broadcast(0,(int)myLocation.x);
-                rc.broadcast(1,(int)myLocation.y);
+                
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
