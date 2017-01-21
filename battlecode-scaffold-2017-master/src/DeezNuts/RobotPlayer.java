@@ -37,24 +37,13 @@ public strictfp class RobotPlayer {
         }
 	}
     static void runScout()throws GameActionException{
-        //int[] globalMap= new int[200*200];
-        
         MapLocation initialMapLocation = rc.getLocation();
-        int x0 = (int) Math.floor(initialMapLocation.x);
-        int y0 = (int) Math.floor(initialMapLocation.y);
-        
+
         //exploring
         MapLocation[] locationsVisited= new MapLocation[500];
         locationsVisited[0]=initialMapLocation;
         Direction stride= new Direction((float)(Math.random()*2*Math.PI));
-        int indexMove=0;
-        
-        //
-        MapLocation[] initialArchonLocations= rc.getInitialArchonLocations(rc.getTeam());
-        //Pick the first one as reference for all units.
-        int initialArchonX = (int)initialArchonLocations[0].x;
-        int initialArchonY = (int)initialArchonLocations[0].y;
-       
+        int indexMove=0;   
     	while (true){
     		try{  
     		    if (rc.getRoundNum() < 5000) {
@@ -62,24 +51,14 @@ public strictfp class RobotPlayer {
     		        int x = (int) Math.floor(currentLocation.x);
     		        int y = (int) Math.floor(currentLocation.y);
 
-    		        //TreeInfo[] treeLocations=rc.senseNearbyTrees((float)10.0);
-    		        
-//		        	int treeX= (int)Math.floor(tree.location.x);
-//		        	int treeY= (int)Math.floor(tree.location.y);
-//		        	String xLocation=Integer.toBinaryString(treeX);
-//		        	String yLocation=Integer.toBinaryString(Math.abs(treeY));
-//		        	String sign=Integer.toString((int)Math.signum(treeY));
-//		        	
-//		        	String messageToSend=sign+YLocation+xLocation;
-
-		        	
-    		        
+  		        
 		        	for (int index=1;index<=10;index++){
 		        		
 		        		int isOpen=rc.readBroadcast(index);
 		        		
 		        		//0 is open, 1 is Close
 		        		if (isOpen==0){
+		        			System.out.println("joining channel: "+index);
 		        			//The channels from 11 to 20
 		        			rc.broadcast(index,1);
 		        			int currentIndex=10*index+1;
@@ -88,44 +67,48 @@ public strictfp class RobotPlayer {
 		        			//Initial Message to send
 		        			String xInitial=Integer.toBinaryString(x);
 		        			String yInitial=Integer.toBinaryString(y);
-		        			String signInitial=Integer.toString((int)Math.signum(y));
-		        			
-		        			String initialMessageToSend=signInitial+yInitial+xInitial;
-		        			
-		        			rc.broadcast(currentIndex,Integer.parseInt(initialMessageToSend,2));
+
+		        			rc.broadcast(currentIndex,Integer.parseInt(xInitial,2));
 		        			currentIndex++;
-		        			String toSend="";
+		        			rc.broadcast(currentIndex,Integer.parseInt(yInitial,2));
+		        			currentIndex++;
+		        			int needToScan=169;
+		        			//Always start with a 1 and ignore later for efficiency
+		        			String toSend="1";
 		        			for (int dx=x-6;dx<=x+6;dx++){
 		        				for (int dy=y+6;dy>=y-6;dy--){
+		        					needToScan--;
 	        						if (rc.senseTreeAtLocation(new MapLocation(dx,dy))!=null){
 	        							toSend=toSend+"1";	
 	        						}
 	        						else{
 	        							toSend=toSend+"0";
 	        						}
-	        						//System.out.println(toSend.length());
-		        					if (toSend.length()==28){
+	        						
+		        					if (toSend.length()==30){
+		        						
+		        						//System.out.println(toSend.length());
 		        						rc.broadcast(currentIndex,Integer.parseInt(toSend,2));
+		        						
 		        						currentIndex++;
-		        						toSend="";
+		        						toSend="1";
+		        					}
+		        					else{
+		        						if (needToScan==0){
+		        							//System.out.println(toSend.length());
+			        						rc.broadcast(currentIndex,Integer.parseInt(toSend,2));
+			        						
+			        						currentIndex++;
+			        						toSend="1";
+		        						}
 		        					}
 	        					
 		        					
 		        				}
 		        			}
-		        			rc.broadcast(index*10+10,1);
 		        			break;
-		        		}
-    		        	
-    		        	
-    		        			
-    		        	
-    		        	
-    		        	
+		        		}	
     		        }
-    		        
-    		        
-    		        
     		        ////////////////////////////////////////////////////////////////
     		        
     		    	if (currentLocation.distanceTo(locationsVisited[indexMove])<20){
@@ -147,70 +130,11 @@ public strictfp class RobotPlayer {
     		    		locationsVisited[indexMove]=currentLocation;
     		    	}
     		    	
-//    		    	String rep = "";
-//    		    	for (int i = 199; i>=0; i--) {
-//    		    		for (int j = 0; j < 200; j++) {
-//    		    			rep += Integer.toString(globalMap[200*i+j]);
-//    		    		}
-//    		    		rep += "\n";
-//    		    	}
-    		    	
-    		    	//System.out.println(rep);
-    		    			
-//    		        MapLocation currentMapLocation = rc.getLocation();
-//    		        
-//    		        
-//    		        sumX += x-x0;
-//    		        sumY += y-y0;
-//    		        
-//    		        
-//
-//    		        
-//    		        Direction dir;
-//    		        double coinToss = Math.random();
-//    		        double angleFactor = Math.random()*2;
-//    		        
-//    		        //double offsetX=Math.random()*1.0*(sumX/numPlaces)
-//    		        //double offsetY=Math.random()*1.0*(sumY/numPlaces)
-//    		        MapLocation averageLocation = new MapLocation((float) (1.0*sumX/numPlaces+initialMapLocation.x), 
-//    		        		(float) (1.0*sumY/numPlaces+initialMapLocation.y));
-//    		        //System.out.printf("%f, %f", 1.0*sumX/numPlaces, 1.0*sumY/numPlaces);
-//    		        if (coinToss < 0.5) { // turn left
-//    		            dir = initialMapLocation.directionTo(averageLocation).rotateLeftDegrees((float) (90));
-//    		        } else { // turn right
-//                        dir = initialMapLocation.directionTo(averageLocation).rotateRightDegrees((float) (90));
-//    		        }
-//    		        System.out.println(dir);
-//    		        if (rc.canMove(dir)) {
-//    		            rc.move(dir);
-//    		            numPlaces++;
-//    		            System.out.println("I moved");
-//    		        }
-//    		        
+	        
     		    	Clock.yield();
 
-    		        //Edge and corner detection
-    		       
     		        
-    		        //Up
-//    		        for (int elt=1;elt<11;elt++){
-//    		        	MapLocation Up= new MapLocation((float)(x),(float)(y+elt))
-//    		        	MapLocation Down=new MapLocation((float)(x),(float)(y-elt))
-//    		    		MapLocation Left=new MapLocation((float)(x-elt),(float)(y))
-//    		    		MapLocation Right= new MapLocation((float)(x+elt),(float)(y))
-//    		    		if (!Up.onTheMap)){
-//    		    			
-//    		    		}
-//    		        	if (!Down.onTheMap()){
-//    		        		
-//    		        	}
-//    		        	if (!Left.onTheMap()){
-//    		        		
-//    		        	}
-//    		        	if (!Right.onTheMap()){
-//    		        		
-//    		        	}
-//    		        }
+
     		        
     		       
     		    }
@@ -222,14 +146,19 @@ public strictfp class RobotPlayer {
     	}
     }
     static void runArchon() throws GameActionException {
-        System.out.println("I'm an archon!");
+    	MapLocation globalInitialLocation=rc.getInitialArchonLocations(rc.getTeam())[0];
+    	int x0=(int)globalInitialLocation.x-110;
+    	int y0=(int)globalInitialLocation.y-110;
+    	int lastChannelRead=0;
+        Integer[][] globalMap=new Integer[220][220]; //x,y matrix, extra 10,10 is to avoid a sensing bug (scout senses out of scope areas)
+        //Origin of globalMap is x0,y0
 
         // The code you want your robot to perform every round should be in this loop
         while (true) {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-
+            	
                 // Generate a random direction
                 Direction dir = randomDirection();
 
@@ -241,17 +170,43 @@ public strictfp class RobotPlayer {
                 
                 for (int elt=1;elt<11;elt++){
                 	int isOpen=rc.readBroadcast(elt);
-                	if (isOpen==1 && rc.readBroadcast(elt*10+10)==1){
-                		int currentIndex=10*isOpen+1;
-
+                	if (isOpen==1 && elt>lastChannelRead){
+                		System.out.println("reading from channel: "+elt+","+lastChannelRead);
                 		
-                		for (int stuff=currentIndex;stuff<currentIndex+10;stuff++){
-                			System.out.println(rc.readBroadcast(stuff));
+                		int messageCounter=0;
+                		int currentIndex=10*isOpen+1;
+                		String initialXMessage=Integer.toBinaryString(rc.readBroadcast(currentIndex));
+                		int xCenter=Integer.parseInt(initialXMessage,2);
+                		currentIndex++;
+                		String initialYMessage=Integer.toBinaryString(rc.readBroadcast(currentIndex));
+                		int yCenter=Integer.parseInt(initialYMessage,2);
+                		currentIndex++;
+                		for (int stuff=currentIndex;stuff<=currentIndex+5;stuff++){
+                			//Get rid of the first bit it was just there to prevent data loss.
+                			String message=Integer.toBinaryString(rc.readBroadcast(stuff)).substring(1);	
+                			for (int arrayIndex=0;arrayIndex<message.length();arrayIndex++){
+                				messageCounter++;
+                				int arrayElement=Character.getNumericValue(message.charAt(arrayIndex));
+                				int row=messageCounter%13;
+                				int col=messageCounter/13;
+                				int xCoord=xCenter-6+col-x0;
+                				int yCoord=yCenter+6-row-y0;
+                				globalMap[xCoord][yCoord]=arrayElement;
+                			}
+
                 		}
+                		lastChannelRead=elt;
                 		break;
                 	}
-                	
                 }
+                //Archon refreshes every open channel if no more channels are available.
+                
+            	if (rc.readBroadcast(10)==1 && lastChannelRead==10){
+            		for (int elt=1;elt<11;elt++){
+            			rc.broadcast(elt,0);
+            		}
+            		lastChannelRead=0;
+            	}
                 
                 
                 
@@ -271,7 +226,6 @@ public strictfp class RobotPlayer {
     }
 
 	static void runGardener() throws GameActionException {
-        System.out.println("I'm a gardener!");
 
         int maxNumScouts = 2;
         int currentNumScouts = 0;
@@ -296,11 +250,9 @@ public strictfp class RobotPlayer {
 //                }
                 
                 // Randomly attempt to build a soldier or lumberjack in this direction
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < 1) {
-                    rc.buildRobot(RobotType.SOLDIER, dir);
-                } else if (rc.canBuildRobot(RobotType.LUMBERJACK, dir) && Math.random() < 1 && rc.isBuildReady()) {
-                    rc.buildRobot(RobotType.LUMBERJACK, dir);
-                }
+                if (rc.canBuildRobot(RobotType.SCOUT, dir) && Math.random()<0.5 && rc.canBuildRobot(RobotType.SCOUT,dir) ) {
+                    rc.buildRobot(RobotType.SCOUT, dir);
+                } 
 
                 // Move randomly
                 tryMove(randomDirection());
