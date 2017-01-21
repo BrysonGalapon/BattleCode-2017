@@ -267,7 +267,7 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static void runSoldier() throws GameActionException {
+	static void runSoldier() throws GameActionException {
         System.out.println("I'm an soldier!");
         Team enemy = rc.getTeam().opponent();
         
@@ -281,6 +281,8 @@ public strictfp class RobotPlayer {
          * 
          */
         
+        boolean sawAnEnemy = false;
+        MapLocation lastEnemyLocation = null;
         int state = 0;
         
         // The code you want your robot to perform every round should be in this loop
@@ -298,9 +300,16 @@ public strictfp class RobotPlayer {
                     state = 1;
                 }
                 
+                if (enemy_robots.length > 0) {
+                    if (enemy_robots[0].type.equals(RobotType.GARDENER) || enemy_robots[0].type.equals(RobotType.ARCHON)) {
+                        state = 0;
+                    }
+                }
+                
                 switch(state) {
                 
                 case 0: // attacking code
+                    
                     // If there are some...
                     if (enemy_robots.length > 0) {
                         // And we have enough bullets, and haven't attacked yet this turn...
@@ -328,12 +337,37 @@ public strictfp class RobotPlayer {
                     }
                     
                     if (enemy_robots.length == 0) {
-                        // move randomly 
-                        tryMove(randomDirection());
+                        // move towards last enemy direction
+                        if (sawAnEnemy) {
+                            tryMove(myLocation.directionTo(lastEnemyLocation));
+                            
+                            if (Math.random() < 0.8) {
+                                tryMove(myLocation.directionTo(lastEnemyLocation));
+                            } else if (Math.random() < 0.5) {
+                                tryMove(myLocation.directionTo(lastEnemyLocation).rotateLeftDegrees(90));
+                            } else {
+                                tryMove(myLocation.directionTo(lastEnemyLocation).rotateRightDegrees(90));
+                            }
+                        } else {
+                            if (Math.random() < 0.8) {
+                                tryMove(myLocation.directionTo(rc.getInitialArchonLocations(enemy)[0]));
+                            } else if (Math.random() < 0.5) {
+                                MapLocation[] toEnemyArchon = rc.getInitialArchonLocations(enemy);
+                                Direction toEnemy = myLocation.directionTo(toEnemyArchon[0]).rotateLeftDegrees(90);
+                                tryMove(toEnemy);
+                            } else {
+                                MapLocation[] toEnemyArchon = rc.getInitialArchonLocations(enemy);
+                                Direction toEnemy = myLocation.directionTo(toEnemyArchon[0]).rotateRightDegrees(90);
+                                tryMove(toEnemy);
+                            }
+                        }
                     } else {
                         // follow the enemy
-                        tryMove(myLocation.directionTo(enemy_robots[0].location));
+                        tryMove(myLocation.directionTo(enemy_robots[0].location).rotateLeftDegrees(90));
+                        sawAnEnemy = true;
+                        lastEnemyLocation = enemy_robots[0].location;
                     }
+                    
                     break;
                 
                 case 1: // retreating code
@@ -351,9 +385,9 @@ public strictfp class RobotPlayer {
                         tryMove(randomDirection());
                     } else {
                         // run away from the enemy
-                        tryMove(myLocation.directionTo(enemy_robots[0].location).rotateLeftDegrees((float) 180));
+                        tryMove(myLocation.directionTo(enemy_robots[0].location).rotateLeftDegrees((float) 135));
                     }
-                    
+                    Clock.yield();
                     break;
                     
                 case 2: // herding code
